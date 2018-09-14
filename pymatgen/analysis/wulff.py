@@ -346,36 +346,10 @@ class WulffShape(object):
         """
         self.get_plot(*args, **kwargs).show()
 
-    def get_line_in_facet(self, facet):
-        """
-        Returns the sorted pts in a facet used to draw a line
-        """
-
-        lines = list(facet.outer_lines)
-        pt = []
-        prev = None
-        while len(lines) > 0:
-            if prev is None:
-                l = lines.pop(0)
-            else:
-                for i, l in enumerate(lines):
-                    if prev in l:
-                        l = lines.pop(i)
-                        if l[1] == prev:
-                            l.reverse()
-                        break
-            # make sure the lines are connected one by one.
-            # find the way covering all pts and facets
-            pt.append(self.wulff_pt_list[l[0]].tolist())
-            pt.append(self.wulff_pt_list[l[1]].tolist())
-            prev = l[1]
-
-        return pt
-
     def get_plot(self, color_set='PuBu', grid_off=True, axis_off=True,
                  show_area=False, alpha=1, off_color='red', direction=None,
-                 bar_pos=(0.75, 0.15, 0.05, 0.65), bar_on=False, units_in_JPERM2=True,
-                 legend_on=True, aspect_ratio=(8, 8), custom_colors={}):
+                 bar_pos=(0.75, 0.15, 0.05, 0.65), bar_on=False,
+                 legend_on=True, aspect_ratio=(8, 8), custom_colors={}, output=None):
         """
         Get the Wulff shape plot.
 
@@ -430,7 +404,24 @@ class WulffShape(object):
             # assign the color for on_wulff facets according to its
             # index and the color_list for on_wulff
             plane_color = color_list[plane.index]
-            pt = self.get_line_in_facet(plane)
+            lines = list(plane.outer_lines)
+            pt = []
+            prev = None
+            while len(lines) > 0:
+                if prev is None:
+                    l = lines.pop(0)
+                else:
+                    for i, l in enumerate(lines):
+                        if prev in l:
+                            l = lines.pop(i)
+                            if l[1] == prev:
+                                l.reverse()
+                            break
+                # make sure the lines are connected one by one.
+                # find the way covering all pts and facets
+                pt.append(self.wulff_pt_list[l[0]].tolist())
+                pt.append(self.wulff_pt_list[l[1]].tolist())
+                prev = l[1]
             # plot from the sorted pts from [simpx]
             tri = mpl3.art3d.Poly3DCollection([pt])
             tri.set_color(plane_color)
@@ -473,15 +464,18 @@ class WulffShape(object):
                 ax1, cmap=cmap, norm=norm, boundaries=[0] + bounds + [10],
                 extend='both', ticks=bounds[:-1], spacing='proportional',
                 orientation='vertical')
-            units = "$J/m^2$" if units_in_JPERM2 else "$eV/\AA^2$"
-            cbar.set_label('Surface Energies (%s)' %(units), fontsize=100)
+            cbar.set_label('Surface Energies ($J/m^2$)', fontsize=100)
 
         if grid_off:
             ax.grid('off')
         if axis_off:
             ax.axis('off')
-        return plt
-
+        if output is None:
+            return plt
+        else:
+            plt.savefig(output, dpi=600)
+            return plt
+	    
     def _get_azimuth_elev(self, miller_index):
         """
         Args:
@@ -599,37 +593,3 @@ class WulffShape(object):
             tot_surface_energy += self.miller_energy_dict[hkl] * \
                                   self.miller_area_dict[hkl]
         return tot_surface_energy
-
-    @property
-    def tot_corner_sites(self):
-        """
-        Returns the number of vertices in the convex hull.
-            Useful for identifying catalytically active sites.
-        """
-        return len(self.wulff_convex.vertices)
-
-    @property
-    def tot_edges(self):
-        """
-        Returns the number of edges in the convex hull.
-            Useful for identifying catalytically active sites.
-        """
-        all_edges = []
-        for facet in self.facets:
-            edges = []
-            pt = self.get_line_in_facet(facet)
-
-            lines = []
-            for i, p in enumerate(pt):
-                if i == len(pt) / 2:
-                    break
-                lines.append(tuple(sorted(tuple([tuple(pt[i*2]), tuple(pt[i*2+1])]))))
-
-            for i, p in enumerate(lines):
-                if p not in all_edges:
-                    edges.append(p)
-
-            all_edges.extend(edges)
-
-        return len(all_edges)
-
