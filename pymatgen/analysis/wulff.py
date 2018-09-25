@@ -345,7 +345,7 @@ class WulffShape(object):
             \\*\\*kwargs: Passed to get_plot.
         """
         self.get_plot(*args, **kwargs).show()
-
+    
     def get_plot(self, color_set='PuBu', grid_off=True, axis_off=True,
                  show_area=False, alpha=1, off_color='red', direction=None,
                  bar_pos=(0.75, 0.15, 0.05, 0.65), bar_on=False,
@@ -440,12 +440,12 @@ class WulffShape(object):
             color_proxy = color_proxy
             if show_area:
                 ax.legend(color_proxy, self.miller_area, loc='upper left',
-                          bbox_to_anchor=(0, 1), fancybox=True, shadow=False)
+                          bbox_to_anchor=(0, 1), fancybox=False, shadow=False, frameon=False)
             else:
                 ax.legend(color_proxy_on_wulff, miller_on_wulff,
                           loc='upper center',
-                          bbox_to_anchor=(0.5, 1), ncol=3, fancybox=True,
-                          shadow=False)
+                          bbox_to_anchor=(0.5, 1), ncol=3, fancybox=False,
+                          shadow=False, frameon=False)
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.set_zlabel('z')
@@ -475,7 +475,7 @@ class WulffShape(object):
         else:
             plt.savefig(output, dpi=600)
             return plt
-	    
+        
     def _get_azimuth_elev(self, miller_index):
         """
         Args:
